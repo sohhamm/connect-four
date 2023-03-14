@@ -1,27 +1,14 @@
+import {Routes, Route} from '@solidjs/router'
 import type {Component} from 'solid-js'
-
-import logo from './logo.svg'
-import styles from './App.module.css'
+import MainMenu from './pages/main-menu/MainMenu'
+import Game from './pages/game/Game'
 
 const App: Component = () => {
-  const count = 1
   return (
-    <div class={styles.App}>
-      <header class={styles.header}>
-        <img src={logo} class={styles.logo} alt='logo' />
-        <p>
-          Edit <code>src/App.tsx</code> and save to {count}.
-        </p>
-        <a
-          class={styles.link}
-          href='https://github.com/solidjs/solid'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          Learn Solid
-        </a>
-      </header>
-    </div>
+    <Routes>
+      <Route path='/' component={MainMenu} />
+      <Route path='/game' component={Game} />
+    </Routes>
   )
 }
 

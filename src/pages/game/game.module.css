@@ -1,0 +1,14 @@
+.box {
+  height: 100vh;
+  background-color: var(--purple);
+}
+
+.box::after {
+  position: absolute;
+  content: '';
+  bottom: 0px;
+  height: 200px;
+  width: 100%;
+  background-color: var(--dark-purple);
+  border-radius: 60px 60px 0px 0px;
+}
