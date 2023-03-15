@@ -1,17 +1,19 @@
 import styles from './button.module.css'
+import type {JSX} from 'solid-js'
 
 interface ButtonProps {
   btnStyles: string
   imgSrc?: string
-  text: string
+  children: string | JSX.Element
+  imgAlt?: string
 }
 
-const Button = ({text, btnStyles, imgSrc}: ButtonProps) => {
+const Button = ({children, btnStyles, imgSrc, imgAlt}: ButtonProps) => {
   return (
     <div class={`${styles.btn} ${btnStyles}`}>
-      <p class='heading-m'>{text}</p>
+      <p class='heading-m'>{children}</p>
 
-      {imgSrc && <img src={imgSrc} alt='Player versus player' />}
+      {imgSrc && <img src={imgSrc} alt={imgAlt} />}
     </div>
   )
 }

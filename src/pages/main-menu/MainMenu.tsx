@@ -1,8 +1,9 @@
-import type {Component} from 'solid-js'
 import styles from './main-menu.module.css'
 import pvp from '../../assets/images/player-vs-player.svg'
-import {A} from '@solidjs/router'
 import Logo from '../../components/logo/Logo'
+import Button from '../../components/button/Button'
+import {A} from '@solidjs/router'
+import type {Component} from 'solid-js'
 
 const MainMenu: Component = () => {
   return (
@@ -11,16 +12,13 @@ const MainMenu: Component = () => {
         <Logo />
 
         <A href='/game'>
-          <div class={`${styles.btn} ${styles.btnStart}`}>
-            <p class='heading-m'>PLAY VS PLAYER</p>
-            <img src={pvp} alt='Player versus player' />
-          </div>
+          <Button imgSrc={pvp} imgAlt='play versus player' btnStyles={styles.btnStart}>
+            PLAY VS PLAYER
+          </Button>
         </A>
 
         <A href='/rules'>
-          <div class={`${styles.btn} ${styles.btnRules}`}>
-            <p class='heading-m'>GAME RULES</p>
-          </div>
+          <Button btnStyles={styles.btnRules}>GAME RULES</Button>
         </A>
       </div>
     </div>
