@@ -1,14 +1,16 @@
-import {Routes, Route} from '@solidjs/router'
-import type {Component} from 'solid-js'
 import MainMenu from './pages/main-menu/MainMenu'
 import Game from './pages/game/Game'
+import NotFound from './pages/not-found/Notfound'
+import {Route} from '@solidjs/router'
+import type {Component} from 'solid-js'
 
 const App: Component = () => {
   return (
-    <Routes>
+    <>
       <Route path='/' component={MainMenu} />
       <Route path='/game' component={Game} />
-    </Routes>
+      <Route path='*404' component={NotFound} />
+    </>
   )
 }
 

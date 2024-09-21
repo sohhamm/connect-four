@@ -1,12 +1,13 @@
-import {createSignal, type Component} from 'solid-js'
+import {createSignal, type JSX, type Component} from 'solid-js'
 import styles from './game.module.css'
 import Logo from '../../components/logo/Logo'
 
 import boardWhite from '../../assets/images/board-layer-white-large.svg'
 import boardBlack from '../../assets/images/board-layer-black-large.svg'
+import counterRed from '../../assets/images/counter-red-large.svg'
+import counterYellow from '../../assets/images/counter-yellow-large.svg'
 import p1 from '../../assets/images/player-one.svg'
 import p2 from '../../assets/images/player-two.svg'
-import {JSX} from 'solid-js/web/types/jsx'
 
 // player: 0=>empty, 1=>p1, 2=>p2
 // matched boolean => to show after 4 connects
@@ -79,6 +80,13 @@ const Game: Component = () => {
               <p class={`heading-l ${styles.turnTimer}`}>14s</p>
             </div>
           )}
+
+          {/* {positions().map((position,idx) => {
+
+            return position.map(pos=>{
+              return  return <img src={boardWhite} class={styles.boardWhite} />
+            })
+          })} */}
         </div>
         <div class={styles.score}>
           <p class={`heading-xs ${styles.playerLabel}`}>PLAYER 2</p>
