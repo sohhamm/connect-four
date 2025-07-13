@@ -11,6 +11,15 @@
   width: 100%;
   background-color: var(--dark-purple);
   border-radius: 60px 60px 0px 0px;
+  transition: background-color 0.3s ease;
+}
+
+.box.player1Win::after {
+  background-color: var(--red);
+}
+
+.box.player2Win::after {
+  background-color: var(--yellow);
 }
 
 .header {
@@ -30,6 +39,13 @@
   border: none;
   padding: 0 20.5px;
   color: var(--white);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.headerBtn:hover {
+  transform: translateY(-2px);
+  background-color: #4c1a9e;
 }
 
 .boardBox {
@@ -112,4 +128,216 @@
 
 .turnTimer {
   margin-top: 2px;
+}
+
+.boardContainer {
+  position: relative;
+  cursor: pointer;
+}
+
+.boardContainer:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+.counters {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  padding: 16px 17px 48px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.counter {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.counter.matched {
+  filter: brightness(1.3);
+}
+
+.winRings {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  padding: 16px 17px 48px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.winRing {
+  width: 100%;
+  height: 100%;
+  border: 5px solid white;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.columnHover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  padding: 16px 17px 48px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hoverPreview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.6;
+  grid-row: 1;
+  animation: bouncePreview 0.3s ease-in-out;
+}
+
+.dropContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  padding: 16px 17px 48px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.droppingPiece {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: dropDown 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes dropDown {
+  from {
+    transform: translateY(-600px);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bouncePreview {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+}
+
+.markers {
+  position: absolute;
+  top: -50px;
+  left: 0;
+  width: 100%;
+  height: 36px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  justify-items: center;
+  align-items: center;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.marker {
+  width: 38px;
+  height: 36px;
+  transition: all 0.2s ease-in-out;
+}
+
+@keyframes markerBounce {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.winState {
+  position: absolute;
+  bottom: -110px;
+  z-index: 3;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  width: 285px;
+  height: 160px;
+  background-color: var(--white);
+  border: 3px solid var(--black);
+  box-shadow: 0px 10px 0px var(--black);
+  border-radius: 20px;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.win1 {
+  color: var(--black);
+}
+
+.win2 {
+  color: var(--black);
+}
+
+.winLabel {
+  margin-bottom: 8px;
+}
+
+.winText {
+  margin-bottom: 16px;
+}
+
+.playAgainBtn {
+  background-color: var(--dark-purple);
+  color: var(--white);
+  border: none;
+  padding: 10px 21px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.playAgainBtn:hover {
+  background-color: var(--red);
 }

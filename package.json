@@ -1,7 +1,8 @@
 {
   "name": "connect-four",
-  "version": "0.0.0",
-  "description": "",
+  "version": "1.0.0",
+  "description": "A Connect Four game built with SolidJS - Frontend Mentor challenge solution",
+  "type": "module",
   "scripts": {
     "start": "vite",
     "dev": "vite",

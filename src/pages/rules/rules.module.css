@@ -1,3 +1,118 @@
 .box {
   height: 100vh;
+  background: linear-gradient(180deg, #5C2DD5 0%, #7945FF 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.container {
+  background: white;
+  border-radius: 40px;
+  padding: 3rem;
+  max-width: 540px;
+  width: 100%;
+  text-align: left;
+  border: 3px solid #000000;
+  box-shadow: 0px 10px 0px #000000;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #000000;
+}
+
+.content {
+  margin-bottom: 3rem;
+}
+
+.subtitle {
+  color: #7945FF;
+  margin: 2rem 0 1rem 0;
+}
+
+.subtitle:first-child {
+  margin-top: 0;
+}
+
+.text {
+  color: #000000;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.steps {
+  margin: 1.5rem 0;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.stepNumber {
+  background: #000000;
+  color: white;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+.stepText {
+  color: #000000;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.checkBtn {
+  background: #FD6687;
+  border: 3px solid #000000;
+  border-radius: 20px;
+  padding: 1rem;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.checkBtn:hover {
+  transform: translateY(-2px);
+}
+
+.checkIcon {
+  width: 20px;
+  height: 20px;
+  background: url('../../assets/images/icon-check.svg') center/contain no-repeat;
+}
+
+@media (max-width: 768px) {
+  .box {
+    padding: 1rem;
+  }
+  
+  .container {
+    padding: 2rem;
+    border-radius: 20px;
+  }
+  
+  .title {
+    margin-bottom: 1.5rem;
+  }
+  
+  .content {
+    margin-bottom: 2rem;
+  }
 }
