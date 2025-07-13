@@ -1,7 +1,13 @@
 import {createSignal, type JSX, type Component, For, Show, createEffect} from 'solid-js'
 import styles from './game.module.css'
 import Logo from '../../components/logo/Logo'
-import {useNavigate} from '@solidjs/router'
+import {useNavigate, useSearchParams} from '@solidjs/router'
+import { handleError, validateColumn, GameError } from '../../utils/errorHandler'
+import { validateDropMove, findLowestEmptyRow } from '../../utils/gameValidation'
+import { perfMonitor } from '../../utils/performance'
+import { logger } from '../../utils/logger'
+import { computerAI } from '../../utils/computerAI'
+import type { Cell, GameState, Player, PlayerScores, DroppingPiece } from '../../types/game'
 
 import boardWhite from '../../assets/images/board-layer-white-large.svg'
 import boardBlack from '../../assets/images/board-layer-black-large.svg'
@@ -9,30 +15,29 @@ import counterRed from '../../assets/images/counter-red-large.svg'
 import counterYellow from '../../assets/images/counter-yellow-large.svg'
 import p1 from '../../assets/images/player-one.svg'
 import p2 from '../../assets/images/player-two.svg'
+import cpu from '../../assets/images/cpu.svg'
+import you from '../../assets/images/you.svg'
 import markerRed from '../../assets/images/marker-red.svg'
 import markerYellow from '../../assets/images/marker-yellow.svg'
 
-// player: 0=>empty, 1=>p1, 2=>p2
-// matched boolean => to show after 4 connects
-
-type Cell = {
-  player: number
-  matched: boolean
-}
-
-type GameState = 'playing' | 'won' | 'draw'
-
 const Game: Component = () => {
+  logger.info('Game component initialized')
+  
   const navigate = useNavigate()
-  const [currentPlayer, setCurrentPlayer] = createSignal(1)
-  const [board, setBoard] = createSignal(createEmptyBoard())
+  const [searchParams] = useSearchParams()
+  const gameMode = searchParams.mode || 'pvp'
+  const isVsCPU = gameMode === 'cpu'
+  
+  const [currentPlayer, setCurrentPlayer] = createSignal<Player>(1)
+  const [board, setBoard] = createSignal<Cell[][]>(createEmptyBoard())
   const [gameState, setGameState] = createSignal<GameState>('playing')
-  const [winner, setWinner] = createSignal<number | null>(null)
-  const [playerScores, setPlayerScores] = createSignal({player1: 0, player2: 0})
-  const [timeLeft, setTimeLeft] = createSignal(30)
-  const [isTimerActive, setIsTimerActive] = createSignal(true)
+  const [winner, setWinner] = createSignal<Player | null>(null)
+  const [playerScores, setPlayerScores] = createSignal<PlayerScores>({player1: 0, player2: 0})
+  const [timeLeft, setTimeLeft] = createSignal<number>(30)
+  const [isTimerActive, setIsTimerActive] = createSignal<boolean>(true)
   const [hoveredColumn, setHoveredColumn] = createSignal<number | null>(null)
-  const [droppingPiece, setDroppingPiece] = createSignal<{column: number, row: number, player: number} | null>(null)
+  const [droppingPiece, setDroppingPiece] = createSignal<DroppingPiece | null>(null)
+  const [isAIThinking, setIsAIThinking] = createSignal<boolean>(false)
 
   // Timer effect
   createEffect(() => {
@@ -42,7 +47,7 @@ const Game: Component = () => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           // Time's up - other player wins
-          const otherPlayer = currentPlayer() === 1 ? 2 : 1
+          const otherPlayer: Player = currentPlayer() === 1 ? 2 : 1
           handleWin(otherPlayer)
           return 30
         }
@@ -53,27 +58,50 @@ const Game: Component = () => {
     return () => clearInterval(timer)
   })
 
-  const dropDisc = (column: number) => {
-    if (gameState() !== 'playing' || droppingPiece()) return
+  // AI move effect - only triggers when it's Player 2's turn in CPU mode
+  createEffect(() => {
+    if (gameState() !== 'playing' || !isVsCPU || currentPlayer() !== 2 || droppingPiece() || isAIThinking()) return
+    
+    makeAIMove()
+  })
 
-    const currentBoard = board()
+  const makeAIMove = () => {
+    setIsAIThinking(true)
     
-    // Check if column is full
-    if (currentBoard[0][column].player !== 0) {
-      // Column is full - could add visual feedback here
-      return
-    }
-    
-    // Find the lowest empty row in the column
-    for (let row = 5; row >= 0; row--) {
-      if (currentBoard[row][column].player === 0) {
-        const player = currentPlayer()
-        
-        // Start drop animation
-        setDroppingPiece({ column, row, player })
-        
-        // Add piece to board after animation
-        setTimeout(() => {
+    // Add delay to make AI move feel more natural
+    setTimeout(() => {
+      try {
+        const aiColumn = computerAI.getBestMove(board(), 2, 'medium')
+        dropDisc(aiColumn)
+      } catch (error) {
+        handleError(error)
+      } finally {
+        setIsAIThinking(false)
+      }
+    }, 800)
+  }
+
+  const dropDisc = (column: number) => {
+    try {
+      if (gameState() !== 'playing' || droppingPiece()) return
+
+      validateColumn(column)
+      const currentBoard = board()
+      validateDropMove(currentBoard, column)
+      
+      const row = findLowestEmptyRow(currentBoard, column)
+      if (row === -1) {
+        throw new GameError('No empty row found in column', 'NO_EMPTY_ROW')
+      }
+
+      const player = currentPlayer()
+      
+      // Start drop animation
+      setDroppingPiece({ column, row, player })
+      
+      // Add piece to board after animation
+      setTimeout(() => {
+        try {
           const newBoard = board().map(row => [...row])
           newBoard[row][column].player = player
           setBoard(newBoard)
@@ -89,25 +117,38 @@ const Game: Component = () => {
             setCurrentPlayer(player === 1 ? 2 : 1)
             setTimeLeft(30)
           }
-        }, 500) // Animation duration
-        break
-      }
+        } catch (error) {
+          handleError(error)
+          setDroppingPiece(null)
+        }
+      }, 500) // Animation duration
+    } catch (error) {
+      handleError(error)
     }
   }
 
   const handleBoardClick: JSX.EventHandler<HTMLDivElement, MouseEvent> = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const columnWidth = rect.width / 7
-    const column = Math.floor(x / columnWidth)
-    
-    if (column >= 0 && column < 7) {
-      dropDisc(column)
+    try {
+      // Prevent clicks during AI turn or when AI is thinking
+      if (isVsCPU && (currentPlayer() === 2 || isAIThinking())) return
+      
+      const rect = e.currentTarget.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const columnWidth = rect.width / 7
+      const column = Math.floor(x / columnWidth)
+      
+      if (column >= 0 && column < 7) {
+        dropDisc(column)
+      }
+    } catch (error) {
+      handleError(error)
     }
   }
 
   const handleBoardMouseMove: JSX.EventHandler<HTMLDivElement, MouseEvent> = (e) => {
     if (gameState() !== 'playing') return
+    // Don't show hover during AI turn
+    if (isVsCPU && (currentPlayer() === 2 || isAIThinking())) return
     
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
@@ -123,7 +164,8 @@ const Game: Component = () => {
     setHoveredColumn(null)
   }
 
-  const checkWin = (board: Cell[][], row: number, col: number, player: number): boolean => {
+  const checkWin = (board: Cell[][], row: number, col: number, player: Player): boolean => {
+    perfMonitor.mark('checkWin-start')
     // Check horizontal
     let count = 1
     let winCells = [[row, col]]
@@ -189,9 +231,13 @@ const Game: Component = () => {
     }
     if (count >= 4) {
       markWinningCells(board, winCells)
+      perfMonitor.mark('checkWin-end')
+      perfMonitor.measure('checkWin', 'checkWin-start', 'checkWin-end')
       return true
     }
 
+    perfMonitor.mark('checkWin-end')
+    perfMonitor.measure('checkWin', 'checkWin-start', 'checkWin-end')
     return false
   }
 
@@ -205,7 +251,7 @@ const Game: Component = () => {
     return board.every(row => row.every(cell => cell.player !== 0))
   }
 
-  const handleWin = (player: number) => {
+  const handleWin = (player: Player) => {
     setGameState('won')
     setWinner(player)
     setIsTimerActive(false)
@@ -249,9 +295,9 @@ const Game: Component = () => {
 
       <div class={styles.boardBox}>
         <div class={styles.score}>
-          <p class={`heading-xs ${styles.playerLabel}`}>PLAYER 1</p>
+          <p class={`heading-xs ${styles.playerLabel}`}>{isVsCPU ? 'YOU' : 'PLAYER 1'}</p>
           <p class={`${styles.scoreText} heading-l`}>{playerScores().player1}</p>
-          <img src={p1} class={styles.playerLogo} />
+          <img src={isVsCPU ? you : p1} class={styles.playerLogo} />
         </div>
         <div class={styles.board}>
           {/* Column markers */}
@@ -349,12 +395,14 @@ const Game: Component = () => {
           <Show when={gameState() === 'playing'}>
             <Show when={currentPlayer() === 1} fallback={
               <div class={`${styles.turn} ${styles.turn2}`}>
-                <p class={`heading-xs ${styles.turnLabel}`}>PLAYER 2'S TURN</p>
+                <p class={`heading-xs ${styles.turnLabel}`}>
+                  {isVsCPU ? (isAIThinking() ? 'CPU THINKING...' : 'CPU\'S TURN') : 'PLAYER 2\'S TURN'}
+                </p>
                 <p class={`heading-l ${styles.turnTimer}`}>{timeLeft()}s</p>
               </div>
             }>
               <div class={`${styles.turn} ${styles.turn1}`}>
-                <p class={`heading-xs ${styles.turnLabel}`}>PLAYER 1'S TURN</p>
+                <p class={`heading-xs ${styles.turnLabel}`}>{isVsCPU ? 'YOUR TURN' : 'PLAYER 1\'S TURN'}</p>
                 <p class={`heading-l ${styles.turnTimer}`}>{timeLeft()}s</p>
               </div>
             </Show>
@@ -362,7 +410,9 @@ const Game: Component = () => {
 
           <Show when={gameState() === 'won'}>
             <div class={`${styles.winState} ${winner() === 1 ? styles.win1 : styles.win2}`}>
-              <p class={`heading-xs ${styles.winLabel}`}>PLAYER {winner()}</p>
+              <p class={`heading-xs ${styles.winLabel}`}>
+                {isVsCPU ? (winner() === 1 ? 'YOU' : 'CPU') : `PLAYER ${winner()}`}
+              </p>
               <p class={`heading-l ${styles.winText}`}>WINS</p>
               <button class={`${styles.playAgainBtn} heading-xs`} onClick={handlePlayAgain}>
                 PLAY AGAIN
@@ -380,9 +430,9 @@ const Game: Component = () => {
           </Show>
         </div>
         <div class={styles.score}>
-          <p class={`heading-xs ${styles.playerLabel}`}>PLAYER 2</p>
+          <p class={`heading-xs ${styles.playerLabel}`}>{isVsCPU ? 'CPU' : 'PLAYER 2'}</p>
           <p class={`${styles.scoreText} heading-l`}>{playerScores().player2}</p>
-          <img src={p2} class={styles.playerLogo} />
+          <img src={isVsCPU ? cpu : p2} class={styles.playerLogo} />
         </div>
       </div>
     </div>
@@ -400,5 +450,3 @@ const createEmptyBoard = (): Cell[][] => {
     }))
   )
 }
-
-const initialBoard = createEmptyBoard()
